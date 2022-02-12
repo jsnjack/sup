@@ -16,15 +16,21 @@ build:
 	@rm -f ./bin/*
 	go build -o ./bin/sup ./cmd/sup
 
-dist:
+bin/sup_linux_amd64.tar.gz: *.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/sup_linux_amd64
+	tar --transform='s,_.*,,' --transform='s,bin/,,' -cz -f bin/sup_linux_amd64.tar.gz bin/sup_linux_amd64
+
+bin/sup_darwin_amd64.tar.gz: *.go
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o bin/sup_darwin_amd64
+	tar --transform='s,_.*,,' --transform='s,bin/,,' -cz -f bin/sup_darwin_amd64.tar.gz bin/sup_darwin_amd64
+
+bin/sup_darwin_arm64.tar.gz: *.go
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o bin/sup_darwin_arm64
+	tar --transform='s,_.*,,' --transform='s,bin/,,' -cz -f bin/sup_darwin_arm64.tar.gz bin/sup_darwin_arm64
+
+dist: bin/sup_linux_amd64.tar.gz bin/sup_darwin_amd64.tar.gz bin/sup_darwin_arm64.tar.gz
 	@mkdir -p ./bin
 	@rm -f ./bin/*
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/sup_linux_amd64
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o bin/sup_darwin_amd64
-	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o bin/sup_darwin_arm64
-	tar --transform='s,_.*,,' --transform='s,bin/,,' -cz -f bin/sup_linux_amd64.tar.gz bin/sup_linux_amd64
-	tar --transform='s,_.*,,' --transform='s,bin/,,' -cz -f bin/sup_darwin_amd64.tar.gz bin/sup_darwin_amd64
-	tar --transform='s,_.*,,' --transform='s,bin/,,' -cz -f bin/sup_darwin_arm64.tar.gz bin/sup_darwin_arm64
 
 test:
 	go test ./...

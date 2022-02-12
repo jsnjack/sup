@@ -19,11 +19,12 @@ build:
 dist:
 	@mkdir -p ./bin
 	@rm -f ./bin/*
-	GOOS=darwin GOARCH=amd64 go build -o ./bin/sup-darwin64 ./cmd/sup
-	GOOS=linux GOARCH=amd64 go build -o ./bin/sup-linux64 ./cmd/sup
-	GOOS=linux GOARCH=386 go build -o ./bin/sup-linux386 ./cmd/sup
-	GOOS=windows GOARCH=amd64 go build -o ./bin/sup-windows64.exe ./cmd/sup
-	GOOS=windows GOARCH=386 go build -o ./bin/sup-windows386.exe ./cmd/sup
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/sup_linux_amd64
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o bin/sup_darwin_amd64
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o bin/sup_darwin_arm64
+	tar --transform='s,_.*,,' --transform='s,bin/,,' -cz -f bin/sup_linux_amd64.tar.gz bin/sup_linux_amd64
+	tar --transform='s,_.*,,' --transform='s,bin/,,' -cz -f bin/sup_darwin_amd64.tar.gz bin/sup_darwin_amd64
+	tar --transform='s,_.*,,' --transform='s,bin/,,' -cz -f bin/sup_darwin_arm64.tar.gz bin/sup_darwin_arm64
 
 test:
 	go test ./...

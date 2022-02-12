@@ -1,0 +1,66 @@
+name: Release sup
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go environment
+        uses: actions/setup-go@v2.1.3
+        with:
+          go-version: 1.17
+
+      - name: Build application
+        run: make dist
+
+      - name: Calculate version
+        run: echo "VERSION=v$(git log --oneline --all | wc -l)" >> $GITHUB_ENV
+
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.VERSION }}
+          release_name: ${{ env.VERSION }}
+          draft: false
+          prerelease: false
+
+      - name: Upload linux amd64 asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/sup_linux_amd64.tar.gz
+          asset_name: sup_linux_amd64.tar.gz
+          asset_content_type: application/octet-stream
+
+      - name: Upload darwin amd64 asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/sup_darwin_amd64.tar.gz
+          asset_name: sup_darwin_amd64.tar.gz
+          asset_content_type: application/octet-stream
+
+      - name: Upload darwin arm64 asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/sup_darwin_arm64.tar.gz
+          asset_name: sup_darwin_arm64.tar.gz
+          asset_content_type: application/octet-stream

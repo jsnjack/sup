@@ -328,6 +328,7 @@ func main() {
 				host.IdentityFile = resolvePath(conf.IdentityFile)
 				host.Address = conf.HostName
 				host.Port = fmt.Sprintf("%d", conf.Port)
+				host.KnownAs = conf.Host[0]
 			}
 		}
 	}

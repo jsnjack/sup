@@ -54,6 +54,7 @@ type Host struct {
 	Port         string
 	User         string
 	IdentityFile string
+	KnownAs      string // The first Host value in SSH config, if -sshconfig flag is used
 }
 
 func (h *Host) GetHost() string {
@@ -61,7 +62,13 @@ func (h *Host) GetHost() string {
 }
 
 func (h *Host) GetPrefixText() string {
-	return fmt.Sprintf("%s@%s:%s | ", h.User, h.Address, h.Port)
+	var prefix string
+	if h.KnownAs != "" {
+		prefix = h.KnownAs
+	} else {
+		prefix = fmt.Sprintf("%s@%s:%s", h.User, h.Address, h.Port)
+	}
+	return fmt.Sprintf("%s | ", prefix)
 }
 
 // NewHost parses and normalizes <user>@<host:port> from a given string and

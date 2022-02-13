@@ -13,6 +13,10 @@ all:
 
 build: bin/sup
 
+.PHONY:
+watch:
+	ls *.go cmd/sup/*.go | entr make build
+
 bin/sup: *.go cmd/sup/*.go
 	go build -o ./bin/sup ./cmd/sup
 
@@ -28,6 +32,7 @@ bin/sup_darwin_arm64.tar.gz: *.go cmd/sup/*.go
 	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o bin/sup_darwin_arm64 ./cmd/sup
 	tar --transform='s,_.*,,' --transform='s,bin/,,' -cz -f bin/sup_darwin_arm64.tar.gz bin/sup_darwin_arm64
 
+.PHONY:
 dist: bin/sup_linux_amd64.tar.gz bin/sup_darwin_amd64.tar.gz bin/sup_darwin_arm64.tar.gz
 
 test:

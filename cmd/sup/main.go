@@ -77,7 +77,7 @@ func networkUsage(conf *sup.Supfile) {
 	for _, name := range conf.Networks.Names {
 		fmt.Fprintf(w, "- %v\n", name)
 		network, _ := conf.Networks.Get(name)
-		for _, host := range network.Hosts {
+		for _, host := range network.HostsFromConfig {
 			fmt.Fprintf(w, "\t- %v\n", host)
 		}
 	}

@@ -18,8 +18,7 @@ import (
 type SSHClient struct {
 	conn         *ssh.Client
 	sess         *ssh.Session
-	user         string
-	host         string
+	host         *Host
 	remoteStdin  io.WriteCloser
 	remoteStdout io.Reader
 	remoteStderr io.Reader
@@ -79,16 +78,14 @@ type SSHDialFunc func(net, addr string, config *ssh.ClientConfig) (*ssh.Client, 
 
 // Connect creates SSH connection to a specified host.
 // It expects the host of the form "[ssh://]host[:port]".
-func (c *SSHClient) Connect(host *Host) error {
-	return c.ConnectWith(host, ssh.Dial)
+func (c *SSHClient) Connect() error {
+	return c.ConnectWith(ssh.Dial)
 }
 
 // ConnectWith creates a SSH connection to a specified host. It will use dialer to establish the
 // connection.
 // TODO: Split Signers to its own method.
-func (c *SSHClient) ConnectWith(host *Host, dialer SSHDialFunc) error {
-	c.user = host.User
-	c.host = host.GetHost()
+func (c *SSHClient) ConnectWith(dialer SSHDialFunc) error {
 	if c.connOpened {
 		return fmt.Errorf("Already connected")
 	}
@@ -96,7 +93,7 @@ func (c *SSHClient) ConnectWith(host *Host, dialer SSHDialFunc) error {
 	initAuthMethodOnce.Do(initAuthMethod)
 
 	config := &ssh.ClientConfig{
-		User: c.user,
+		User: c.host.User,
 		Auth: []ssh.AuthMethod{
 			authMethod,
 		},
@@ -104,9 +101,9 @@ func (c *SSHClient) ConnectWith(host *Host, dialer SSHDialFunc) error {
 	}
 
 	var err error
-	c.conn, err = dialer("tcp", c.host, config)
+	c.conn, err = dialer("tcp", c.host.GetHost(), config)
 	if err != nil {
-		return ErrConnect{c.user, c.host, err.Error()}
+		return ErrConnect{c.host.User, c.host.GetHost(), err.Error()}
 	}
 	c.connOpened = true
 
@@ -225,7 +222,7 @@ func (c *SSHClient) Stdout() io.Reader {
 }
 
 func (c *SSHClient) Prefix() (string, int) {
-	host := c.user + "@" + c.host + " | "
+	host := c.host.User + "@" + c.host.GetHost() + " | "
 	return c.color + host + ResetColor, len(host)
 }
 

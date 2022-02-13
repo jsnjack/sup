@@ -12,7 +12,7 @@ import (
 // Client is a wrapper over the SSH connection/sessions.
 type LocalhostClient struct {
 	cmd     *exec.Cmd
-	user    string
+	host    *Host
 	stdin   io.WriteCloser
 	stdout  io.Reader
 	stderr  io.Reader
@@ -20,8 +20,7 @@ type LocalhostClient struct {
 	env     string //export FOO="bar"; export BAR="baz";
 }
 
-func (c *LocalhostClient) Connect(host *Host) error {
-	c.user = host.User
+func (c *LocalhostClient) Connect() error {
 	return nil
 }
 
@@ -84,7 +83,7 @@ func (c *LocalhostClient) Stdout() io.Reader {
 }
 
 func (c *LocalhostClient) Prefix() (string, int) {
-	host := c.user + "@localhost" + " | "
+	host := c.host.User + "@localhost" + " | "
 	return ResetColor + host, len(host)
 }
 

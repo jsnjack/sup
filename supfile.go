@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"os/exec"
+	"os/user"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -37,7 +39,11 @@ func (n *Network) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return err
 	}
 	for _, item := range n.HostsFromConfig {
-		n.Hosts = append(n.Hosts, &Host{Address: item, Port: 22})
+		host, err := NewHost(item)
+		if err != nil {
+			return err
+		}
+		n.Hosts = append(n.Hosts, host)
 	}
 	return nil
 }
@@ -45,9 +51,55 @@ func (n *Network) UnmarshalYAML(unmarshal func(interface{}) error) error {
 // Host describes how to connect to a host
 type Host struct {
 	Address      string
-	Port         int
+	Port         string
 	User         string
 	IdentityFile string
+}
+
+func (h *Host) GetHost() string {
+	return fmt.Sprintf("%s:%s", h.Address, h.Port)
+}
+
+// NewHost parses and normalizes <user>@<host:port> from a given string and
+// creates Host instance.
+func NewHost(hostStr string) (*Host, error) {
+	host := Host{}
+	// Remove extra "ssh://" schema
+	if len(hostStr) > 6 && hostStr[:6] == "ssh://" {
+		hostStr = hostStr[6:]
+	}
+
+	// Split by the last "@", since there may be an "@" in the username.
+	if at := strings.LastIndex(hostStr, "@"); at != -1 {
+		host.User = hostStr[:at]
+		hostStr = hostStr[at+1:]
+	}
+
+	// Add default user, if not set
+	if host.User == "" {
+		u, err := user.Current()
+		if err != nil {
+			return nil, err
+		}
+		host.User = u.Username
+	}
+
+	if strings.Index(hostStr, "/") != -1 {
+		return nil, fmt.Errorf("unexpected slash in the host URL")
+	}
+
+	// Add default port, if not set
+	port := "22"
+	if strings.Contains(hostStr, ":") {
+		var err error
+		hostStr, port, err = net.SplitHostPort(hostStr)
+		if err != nil {
+			return nil, err
+		}
+	}
+	host.Address = hostStr
+	host.Port = port
+	return &host, nil
 }
 
 // Networks is a list of user-defined networks

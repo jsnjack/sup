@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
-	"os/user"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -39,42 +38,6 @@ type ErrConnect struct {
 
 func (e ErrConnect) Error() string {
 	return fmt.Sprintf(`Connect("%v@%v"): %v`, e.User, e.Host, e.Reason)
-}
-
-// parseHost parses and normalizes <user>@<host:port> from a given string.
-func (c *SSHClient) parseHost(host string) error {
-	c.host = host
-
-	// Remove extra "ssh://" schema
-	if len(c.host) > 6 && c.host[:6] == "ssh://" {
-		c.host = c.host[6:]
-	}
-
-	// Split by the last "@", since there may be an "@" in the username.
-	if at := strings.LastIndex(c.host, "@"); at != -1 {
-		c.user = c.host[:at]
-		c.host = c.host[at+1:]
-	}
-
-	// Add default user, if not set
-	if c.user == "" {
-		u, err := user.Current()
-		if err != nil {
-			return err
-		}
-		c.user = u.Username
-	}
-
-	if strings.Index(c.host, "/") != -1 {
-		return ErrConnect{c.user, c.host, "unexpected slash in the host URL"}
-	}
-
-	// Add default port, if not set
-	if strings.Index(c.host, ":") == -1 {
-		c.host += ":22"
-	}
-
-	return nil
 }
 
 var initAuthMethodOnce sync.Once
@@ -116,24 +79,21 @@ type SSHDialFunc func(net, addr string, config *ssh.ClientConfig) (*ssh.Client, 
 
 // Connect creates SSH connection to a specified host.
 // It expects the host of the form "[ssh://]host[:port]".
-func (c *SSHClient) Connect(host string) error {
+func (c *SSHClient) Connect(host *Host) error {
 	return c.ConnectWith(host, ssh.Dial)
 }
 
 // ConnectWith creates a SSH connection to a specified host. It will use dialer to establish the
 // connection.
 // TODO: Split Signers to its own method.
-func (c *SSHClient) ConnectWith(host string, dialer SSHDialFunc) error {
+func (c *SSHClient) ConnectWith(host *Host, dialer SSHDialFunc) error {
+	c.user = host.User
+	c.host = host.GetHost()
 	if c.connOpened {
 		return fmt.Errorf("Already connected")
 	}
 
 	initAuthMethodOnce.Do(initAuthMethod)
-
-	err := c.parseHost(host)
-	if err != nil {
-		return err
-	}
 
 	config := &ssh.ClientConfig{
 		User: c.user,
@@ -143,6 +103,7 @@ func (c *SSHClient) ConnectWith(host string, dialer SSHDialFunc) error {
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
+	var err error
 	c.conn, err = dialer("tcp", c.host, config)
 	if err != nil {
 		return ErrConnect{c.user, c.host, err.Error()}

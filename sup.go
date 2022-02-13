@@ -41,7 +41,11 @@ func (sup *Stackup) Run(network *Network, envVars EnvList, commands ...*Command)
 	var bastion *SSHClient
 	if network.Bastion != "" {
 		bastion = &SSHClient{}
-		if err := bastion.Connect(network.Bastion); err != nil {
+		bastionHost, err := NewHost(network.Bastion)
+		if err != nil {
+			return err
+		}
+		if err := bastion.Connect(bastionHost); err != nil {
 			return errors.Wrap(err, "connecting to bastion failed")
 		}
 	}
@@ -60,7 +64,7 @@ func (sup *Stackup) Run(network *Network, envVars EnvList, commands ...*Command)
 				local := &LocalhostClient{
 					env: env + `export SUP_HOST="` + host.Address + `";`,
 				}
-				if err := local.Connect(host.Address); err != nil {
+				if err := local.Connect(host); err != nil {
 					errCh <- errors.Wrap(err, "connecting to localhost failed")
 					return
 				}
@@ -76,12 +80,12 @@ func (sup *Stackup) Run(network *Network, envVars EnvList, commands ...*Command)
 			}
 
 			if bastion != nil {
-				if err := remote.ConnectWith(host.Address, bastion.DialThrough); err != nil {
+				if err := remote.ConnectWith(host, bastion.DialThrough); err != nil {
 					errCh <- errors.Wrap(err, "connecting to remote host through bastion failed")
 					return
 				}
 			} else {
-				if err := remote.Connect(host.Address); err != nil {
+				if err := remote.Connect(host); err != nil {
 					errCh <- errors.Wrap(err, "connecting to remote host failed")
 					return
 				}

@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"os/user"
 
 	"github.com/pkg/errors"
 )
@@ -21,13 +20,8 @@ type LocalhostClient struct {
 	env     string //export FOO="bar"; export BAR="baz";
 }
 
-func (c *LocalhostClient) Connect(_ string) error {
-	u, err := user.Current()
-	if err != nil {
-		return err
-	}
-
-	c.user = u.Username
+func (c *LocalhostClient) Connect(host *Host) error {
+	c.user = host.User
 	return nil
 }
 

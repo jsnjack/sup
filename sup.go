@@ -52,15 +52,15 @@ func (sup *Stackup) Run(network *Network, envVars EnvList, commands ...*Command)
 
 	for i, host := range network.Hosts {
 		wg.Add(1)
-		go func(i int, host string) {
+		go func(i int, host *Host) {
 			defer wg.Done()
 
 			// Localhost client.
-			if host == "localhost" {
+			if host.Address == "localhost" {
 				local := &LocalhostClient{
-					env: env + `export SUP_HOST="` + host + `";`,
+					env: env + `export SUP_HOST="` + host.Address + `";`,
 				}
-				if err := local.Connect(host); err != nil {
+				if err := local.Connect(host.Address); err != nil {
 					errCh <- errors.Wrap(err, "connecting to localhost failed")
 					return
 				}
@@ -70,18 +70,18 @@ func (sup *Stackup) Run(network *Network, envVars EnvList, commands ...*Command)
 
 			// SSH client.
 			remote := &SSHClient{
-				env:   env + `export SUP_HOST="` + host + `";`,
-				user:  network.User,
+				env:   env + `export SUP_HOST="` + host.Address + `";`,
+				user:  host.User,
 				color: Colors[i%len(Colors)],
 			}
 
 			if bastion != nil {
-				if err := remote.ConnectWith(host, bastion.DialThrough); err != nil {
+				if err := remote.ConnectWith(host.Address, bastion.DialThrough); err != nil {
 					errCh <- errors.Wrap(err, "connecting to remote host through bastion failed")
 					return
 				}
 			} else {
-				if err := remote.Connect(host); err != nil {
+				if err := remote.Connect(host.Address); err != nil {
 					errCh <- errors.Wrap(err, "connecting to remote host failed")
 					return
 				}

@@ -222,7 +222,7 @@ func (c *SSHClient) Stdout() io.Reader {
 }
 
 func (c *SSHClient) Prefix() (string, int) {
-	host := c.host.User + "@" + c.host.GetHost() + " | "
+	host := c.host.GetPrefixText()
 	return c.color + host + ResetColor, len(host)
 }
 

@@ -60,6 +60,10 @@ func (h *Host) GetHost() string {
 	return fmt.Sprintf("%s:%s", h.Address, h.Port)
 }
 
+func (h *Host) GetPrefixText() string {
+	return fmt.Sprintf("%s@%s:%s | ", h.User, h.Address, h.Port)
+}
+
 // NewHost parses and normalizes <user>@<host:port> from a given string and
 // creates Host instance.
 func NewHost(hostStr string) (*Host, error) {

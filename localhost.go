@@ -83,7 +83,7 @@ func (c *LocalhostClient) Stdout() io.Reader {
 }
 
 func (c *LocalhostClient) Prefix() (string, int) {
-	host := c.host.User + "@localhost" + " | "
+	host := c.host.GetPrefixText()
 	return ResetColor + host, len(host)
 }
 

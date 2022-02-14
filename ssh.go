@@ -252,3 +252,17 @@ func (c *SSHClient) Signal(sig os.Signal) error {
 		return fmt.Errorf("%v not supported", sig)
 	}
 }
+
+func ConvertClientToLocal(client Client) *LocalhostClient {
+	if remote, ok := client.(*SSHClient); ok {
+		host := Host{
+			Address: "localhost",
+			KnownAs: remote.host.KnownAs + "(local)",
+		}
+		return &LocalhostClient{
+			env:  remote.env,
+			host: &host,
+		}
+	}
+	return client.(*LocalhostClient)
+}

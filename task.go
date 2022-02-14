@@ -103,27 +103,12 @@ func (sup *Stackup) createTasks(cmd *Command, clients []Client, env string) ([]*
 		}
 	}
 
-	// Local command.
-	if cmd.Local != "" {
-		local := &LocalhostClient{
-			env: env + `export SUP_HOST="localhost";`,
+	var localClients []Client
+	if cmd.Local {
+		for _, cl := range clients {
+			localClients = append(localClients, ConvertClientToLocal(cl))
 		}
-		localHost, _ := NewHost("localhost")
-		local.host = localHost
-
-		local.Connect()
-		task := &Task{
-			Run:     cmd.Local,
-			Clients: []Client{local},
-			TTY:     true,
-		}
-		if sup.debug {
-			task.Run = "set -x;" + task.Run
-		}
-		if cmd.Stdin {
-			task.Input = os.Stdin
-		}
-		tasks = append(tasks, task)
+		clients = localClients
 	}
 
 	// Remote command.

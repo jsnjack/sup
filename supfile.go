@@ -148,7 +148,7 @@ func (n *Networks) Get(name string) (Network, bool) {
 type Command struct {
 	Name   string   `yaml:"-"`      // Command name.
 	Desc   string   `yaml:"desc"`   // Command description.
-	Local  string   `yaml:"local"`  // Command(s) to be run locally.
+	Local  bool     `yaml:"local"`  // Run command locally
 	Run    string   `yaml:"run"`    // Command(s) to be run remotelly.
 	Script string   `yaml:"script"` // Load command(s) from script and run it remotelly.
 	Upload []Upload `yaml:"upload"` // See Upload struct.
@@ -368,7 +368,7 @@ func NewSupfile(data []byte) (*Supfile, error) {
 			if cmd.Once {
 				return nil, ErrMustUpdate{"command.once is not supported in Supfile v" + conf.Version}
 			}
-			if cmd.Local != "" {
+			if cmd.Local == true {
 				return nil, ErrMustUpdate{"command.local is not supported in Supfile v" + conf.Version}
 			}
 			if cmd.Serial != 0 {

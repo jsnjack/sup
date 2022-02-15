@@ -257,11 +257,12 @@ func ConvertClientToLocal(client Client) *LocalhostClient {
 	if remote, ok := client.(*SSHClient); ok {
 		host := Host{
 			Address: "localhost",
-			KnownAs: remote.host.KnownAs + "(local)",
+			KnownAs: remote.host.GetHostname() + " (local)",
 		}
 		return &LocalhostClient{
-			env:  remote.env,
-			host: &host,
+			env:   remote.env,
+			host:  &host,
+			color: remote.color,
 		}
 	}
 	return client.(*LocalhostClient)

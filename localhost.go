@@ -18,6 +18,7 @@ type LocalhostClient struct {
 	stderr  io.Reader
 	running bool
 	env     string //export FOO="bar"; export BAR="baz";
+	color   string
 }
 
 func (c *LocalhostClient) Connect() error {
@@ -84,7 +85,7 @@ func (c *LocalhostClient) Stdout() io.Reader {
 
 func (c *LocalhostClient) Prefix() (string, int) {
 	host := c.host.GetPrefixText()
-	return ResetColor + host, len(host)
+	return c.color + host + ResetColor, len(host)
 }
 
 func (c *LocalhostClient) Write(p []byte) (n int, err error) {

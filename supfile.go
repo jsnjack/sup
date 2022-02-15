@@ -57,10 +57,20 @@ type Host struct {
 	KnownAs      string // The first Host value in SSH config, if -sshconfig flag is used
 }
 
+// GetHost returns address:port. It is passed to ssh dialer function
 func (h *Host) GetHost() string {
 	return fmt.Sprintf("%s:%s", h.Address, h.Port)
 }
 
+// GetHostname returns hostname as it was specified in Supfile
+func (h *Host) GetHostname() string {
+	if h.KnownAs != "" {
+		return h.KnownAs
+	}
+	return h.Address
+}
+
+// Returns log prefix for a host output
 func (h *Host) GetPrefixText() string {
 	var prefix string
 	if h.KnownAs != "" {

@@ -63,7 +63,7 @@ func (sup *Stackup) Run(network *Network, envVars EnvList, commands ...*Command)
 			// Localhost client.
 			if host.Address == "localhost" {
 				local := &LocalhostClient{
-					env:  env + `export SUP_HOST="` + host.Address + `";`,
+					env:  env + `export SUP_HOST="` + host.GetHostname() + `";`,
 					host: host,
 				}
 				if err := local.Connect(); err != nil {
@@ -76,7 +76,7 @@ func (sup *Stackup) Run(network *Network, envVars EnvList, commands ...*Command)
 
 			// SSH client.
 			remote := &SSHClient{
-				env:   env + `export SUP_HOST="` + host.Address + `";`,
+				env:   env + `export SUP_HOST="` + host.GetHostname() + `";`,
 				host:  host,
 				color: Colors[i%len(Colors)],
 			}

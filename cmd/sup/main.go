@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -238,10 +237,10 @@ func main() {
 	if supfile == "" {
 		supfile = "./Supfile"
 	}
-	data, err := ioutil.ReadFile(resolvePath(supfile))
+	data, err := os.ReadFile(resolvePath(supfile))
 	if err != nil {
 		firstErr := err
-		data, err = ioutil.ReadFile("./Supfile.yml") // Alternative to ./Supfile.
+		data, err = os.ReadFile("./Supfile.yml") // Alternative to ./Supfile.
 		if err != nil {
 			fmt.Fprintln(os.Stderr, firstErr)
 			fmt.Fprintln(os.Stderr, err)

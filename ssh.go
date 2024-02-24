@@ -3,7 +3,6 @@ package sup
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -59,7 +58,7 @@ func initAuthMethod() {
 		if strings.HasSuffix(file, ".pub") {
 			continue // Skip public keys.
 		}
-		data, err := ioutil.ReadFile(file)
+		data, err := os.ReadFile(file)
 		if err != nil {
 			continue
 		}

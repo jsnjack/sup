@@ -1,13 +1,13 @@
 package main
 
 import (
-	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
-	config, err := ioutil.ReadFile("/etc/example.cfg")
+	config, err := os.ReadFile("/etc/example.cfg")
 	if err != nil {
 		log.Fatal(err)
 	}

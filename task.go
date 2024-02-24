@@ -3,7 +3,6 @@ package sup
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 
 	"github.com/pkg/errors"
@@ -68,7 +67,7 @@ func (sup *Stackup) createTasks(cmd *Command, clients []Client, env string) ([]*
 		if err != nil {
 			return nil, errors.Wrap(err, "can't open script")
 		}
-		data, err := ioutil.ReadAll(f)
+		data, err := io.ReadAll(f)
 		if err != nil {
 			return nil, errors.Wrap(err, "can't read script")
 		}

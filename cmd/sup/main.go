@@ -11,7 +11,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/mikkeloscar/sshconfig"
+	"github.com/jsnjack/sshconfig"
 	"github.com/pkg/errors"
 	"github.com/pressly/sup"
 )

@@ -276,7 +276,6 @@ func connectToBastions(bastions []string) (map[string]*SSHClient, error) {
 		if err := bastionClient.Connect(); err != nil {
 			return nil, errors.Wrap(err, "connecting to bastion failed")
 		}
-		fmt.Print("Connected to bastion: ", bastion, "\n")
 		bastionConnections[bastion] = bastionClient
 	}
 	return bastionConnections, nil

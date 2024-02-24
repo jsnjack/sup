@@ -38,18 +38,21 @@ func (sup *Stackup) Run(network *Network, envVars EnvList, commands ...*Command)
 
 	env := envVars.AsExport()
 
-	// Create clients for every host (either SSH or Localhost).
-	var defaultNetworkBastion *SSHClient
+	// Collect list of all bastions
+	bastions := make([]string, 0)
+	for _, host := range network.Hosts {
+		if host.Bastion != "" {
+			bastions = append(bastions, host.Bastion)
+		}
+	}
 	if network.Bastion != "" {
-		defaultNetworkBastion = &SSHClient{}
-		bastionHost, err := NewHost(network.Bastion)
-		defaultNetworkBastion.host = bastionHost
-		if err != nil {
-			return err
-		}
-		if err := defaultNetworkBastion.Connect(); err != nil {
-			return errors.Wrap(err, "connecting to bastion failed")
-		}
+		bastions = append(bastions, network.Bastion)
+	}
+	// Pre-connect to all bastions, so we can use them as jump hosts. If hosts
+	// are using the same bastion, we don't want to connect to it multiple times.
+	connectedBastions, err := connectToBastions(bastions)
+	if err != nil {
+		return err
 	}
 
 	var wg sync.WaitGroup
@@ -83,23 +86,12 @@ func (sup *Stackup) Run(network *Network, envVars EnvList, commands ...*Command)
 			}
 
 			if host.Bastion != "" {
-				hostBastion := &SSHClient{}
-				bastionHost, err := NewHost(host.Bastion)
-				hostBastion.host = bastionHost
-				if err != nil {
-					errCh <- errors.Wrap(err, "unable to parse bastion host extracted from ssh configuration file")
-					return
-				}
-				if err := hostBastion.Connect(); err != nil {
-					errCh <- errors.Wrap(err, "connecting to bastion failed")
-					return
-				}
-				if err := remote.ConnectWith(hostBastion.DialThrough); err != nil {
+				if err := remote.ConnectWith(connectedBastions[host.Bastion].DialThrough); err != nil {
 					errCh <- errors.Wrap(err, "connecting to remote host through bastion failed")
 					return
 				}
-			} else if defaultNetworkBastion != nil {
-				if err := remote.ConnectWith(defaultNetworkBastion.DialThrough); err != nil {
+			} else if network.Bastion != "" {
+				if err := remote.ConnectWith(connectedBastions[network.Bastion].DialThrough); err != nil {
 					errCh <- errors.Wrap(err, "connecting to remote host through bastion failed")
 					return
 				}
@@ -269,4 +261,36 @@ func (sup *Stackup) Debug(value bool) {
 
 func (sup *Stackup) Prefix(value bool) {
 	sup.prefix = value
+}
+
+func connectToBastions(bastions []string) (map[string]*SSHClient, error) {
+	bastionConnections := make(map[string]*SSHClient)
+	bastions = removeDuplicates(bastions)
+	for _, bastion := range bastions {
+		bastionClient := &SSHClient{}
+		bastionHost, err := NewHost(bastion)
+		bastionClient.host = bastionHost
+		if err != nil {
+			return nil, err
+		}
+		if err := bastionClient.Connect(); err != nil {
+			return nil, errors.Wrap(err, "connecting to bastion failed")
+		}
+		fmt.Print("Connected to bastion: ", bastion, "\n")
+		bastionConnections[bastion] = bastionClient
+	}
+	return bastionConnections, nil
+}
+
+func removeDuplicates(slice []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+
+	for _, entry := range slice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
 }

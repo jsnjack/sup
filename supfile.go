@@ -165,6 +165,11 @@ func (n *Networks) Get(name string) (Network, bool) {
 	return net, ok
 }
 
+func (n *Networks) Set(name string, network *Network) {
+	n.nets[name] = *network
+	n.Names = append(n.Names, name)
+}
+
 // Command represents command(s) to be run remotely.
 type Command struct {
 	Name   string   `yaml:"-"`      // Command name.

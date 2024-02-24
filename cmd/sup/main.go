@@ -19,6 +19,7 @@ var (
 	sshConfig   string
 	onlyHosts   string
 	exceptHosts string
+	hostTargets flagStringSlice
 
 	debug         bool
 	disablePrefix bool
@@ -52,6 +53,7 @@ func init() {
 	flag.StringVar(&sshConfig, "sshconfig", "", "Read SSH Config file, ie. ~/.ssh/config file")
 	flag.StringVar(&onlyHosts, "only", "", "Filter hosts using regexp")
 	flag.StringVar(&exceptHosts, "except", "", "Filter out hosts using regexp")
+	flag.Var(&hostTargets, "t", "Specified hosts will be added to the network with the name '_dynamic'")
 
 	flag.BoolVar(&debug, "D", false, "Enable debug mode")
 	flag.BoolVar(&debug, "debug", false, "Enable debug mode")
@@ -109,6 +111,19 @@ func parseArgs(conf *sup.Supfile) (*sup.Network, []*sup.Command, error) {
 	if len(args) < 1 {
 		networkUsage(conf)
 		return nil, nil, ErrUsage
+	}
+
+	if len(hostTargets) > 0 {
+		dynamicNetwork := &sup.Network{}
+		for _, host := range hostTargets {
+			supHost, err := sup.NewHost(host)
+			if err != nil {
+				return nil, nil, err
+			}
+			dynamicNetwork.HostsFromConfig = append(dynamicNetwork.HostsFromConfig, host)
+			dynamicNetwork.Hosts = append(dynamicNetwork.Hosts, supHost)
+		}
+		conf.Networks.Set("_dynamic", dynamicNetwork)
 	}
 
 	// Does the <network> exist?

@@ -3,6 +3,13 @@ Stack Up
 
 Stack Up is a simple deployment tool that performs given set of commands on multiple hosts in parallel. It reads Supfile, a YAML configuration file, which defines networks (groups of hosts), commands and targets.
 
+# Difference between this fork and the original
+- Updated dependencies
+- Better integration with SSH configuration
+  - `Host` value from SSH configuration can be used to identify server (instead of it's Address)
+  - `ProxyJump` value from SSH configuration can be used to define bastion host
+- Add more colors
+- Change the way `local` commands are executed
 # Demo
 
 [![Sup](https://github.com/pressly/sup/blob/gif/asciinema.gif?raw=true)](https://asciinema.org/a/19742?autoplay=1)
@@ -23,12 +30,13 @@ Stack Up is a simple deployment tool that performs given set of commands on mult
 |-------------------|----------------------------------|
 | `-f Supfile`      | Custom path to Supfile           |
 | `-e`, `--env=[]`  | Set environment variables        |
-| `--only REGEXP`   | Filter hosts matching regexp     |
-| `--except REGEXP` | Filter out hosts matching regexp |
-| `--debug`, `-D`   | Enable debug/verbose mode        |
-| `--disable-prefix`| Disable hostname prefix          |
-| `--help`, `-h`    | Show help/usage                  |
-| `--version`, `-v` | Print version                    |
+| `-only REGEXP`    | Filter hosts matching regexp     |
+| `-except REGEXP`  | Filter out hosts matching regexp |
+| `-debug`, `-D`    | Enable debug/verbose mode        |
+| `-disable-prefix` | Disable hostname prefix          |
+| `-help`, `-h`     | Show help/usage                  |
+| `-version`, `-v`  | Print version                    |
+| `-sshconfig`      |	Read SSH Config file             |
 
 ## Network
 

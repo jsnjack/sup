@@ -60,7 +60,7 @@ func (c *LocalhostClient) Run(task *Task) error {
 
 func (c *LocalhostClient) Wait() error {
 	if !c.running {
-		return fmt.Errorf("Trying to wait on stopped command")
+		return fmt.Errorf("trying to wait on stopped command")
 	}
 	err := c.cmd.Wait()
 	c.running = false

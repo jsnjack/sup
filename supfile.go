@@ -105,7 +105,7 @@ func NewHost(hostStr string) (*Host, error) {
 		host.User = u.Username
 	}
 
-	if strings.Index(hostStr, "/") != -1 {
+	if strings.Contains(hostStr, "/") {
 		return nil, fmt.Errorf("unexpected slash in the host URL")
 	}
 
@@ -378,7 +378,7 @@ func NewSupfile(data []byte) (*Supfile, error) {
 			if cmd.Once {
 				return nil, ErrMustUpdate{"command.once is not supported in Supfile v" + conf.Version}
 			}
-			if cmd.Local == true {
+			if cmd.Local {
 				return nil, ErrMustUpdate{"command.local is not supported in Supfile v" + conf.Version}
 			}
 			if cmd.Serial != 0 {
@@ -402,7 +402,7 @@ func NewSupfile(data []byte) (*Supfile, error) {
 			}
 		}
 		if warning != "" {
-			fmt.Fprintf(os.Stderr, warning)
+			fmt.Fprintln(os.Stderr, warning)
 		}
 
 		fallthrough

@@ -86,7 +86,7 @@ func (c *SSHClient) Connect() error {
 // TODO: Split Signers to its own method.
 func (c *SSHClient) ConnectWith(dialer SSHDialFunc) error {
 	if c.connOpened {
-		return fmt.Errorf("Already connected")
+		return fmt.Errorf("already connected")
 	}
 
 	initAuthMethodOnce.Do(initAuthMethod)
@@ -112,10 +112,10 @@ func (c *SSHClient) ConnectWith(dialer SSHDialFunc) error {
 // Run runs the task.Run command remotely on c.host.
 func (c *SSHClient) Run(task *Task) error {
 	if c.running {
-		return fmt.Errorf("Session already running")
+		return fmt.Errorf("session already running")
 	}
 	if c.sessOpened {
-		return fmt.Errorf("Session already connected")
+		return fmt.Errorf("session already connected")
 	}
 
 	sess, err := c.conn.NewSession()
@@ -166,7 +166,7 @@ func (c *SSHClient) Run(task *Task) error {
 // It closes the SSH session.
 func (c *SSHClient) Wait() error {
 	if !c.running {
-		return fmt.Errorf("Trying to wait on stopped session")
+		return fmt.Errorf("trying to wait on stopped session")
 	}
 
 	err := c.sess.Wait()
@@ -198,7 +198,7 @@ func (c *SSHClient) Close() error {
 		c.sessOpened = false
 	}
 	if !c.connOpened {
-		return fmt.Errorf("Trying to close the already closed connection")
+		return fmt.Errorf("trying to close the already closed connection")
 	}
 
 	err := c.conn.Close()

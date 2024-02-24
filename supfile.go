@@ -55,6 +55,7 @@ type Host struct {
 	User         string
 	IdentityFile string
 	KnownAs      string // The first Host value in SSH config, if -sshconfig flag is used
+	Bastion      string // ProxyJump host for the environment
 }
 
 // GetHost returns address:port. It is passed to ssh dialer function
@@ -120,6 +121,16 @@ func NewHost(hostStr string) (*Host, error) {
 	}
 	host.Address = hostStr
 	host.Port = port
+	// Check if we can retrieve detailed information from ssh config
+	conf, found := extractedHostSSHConfig[host.Address]
+	if found {
+		host.User = conf.User
+		host.IdentityFile = ResolvePath(conf.IdentityFile)
+		host.Address = conf.HostName
+		host.Port = fmt.Sprintf("%d", conf.Port)
+		host.KnownAs = conf.Host[0]
+		host.Bastion = conf.ProxyJump
+	}
 	return &host, nil
 }
 

@@ -4,14 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/user"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"text/tabwriter"
 	"time"
 
-	"github.com/jsnjack/sshconfig"
 	"github.com/pkg/errors"
 	"github.com/pressly/sup"
 )
@@ -207,19 +204,6 @@ func parseArgs(conf *sup.Supfile) (*sup.Network, []*sup.Command, error) {
 	return &network, commands, nil
 }
 
-func resolvePath(path string) string {
-	if path == "" {
-		return ""
-	}
-	if path[:2] == "~/" {
-		usr, err := user.Current()
-		if err == nil {
-			path = filepath.Join(usr.HomeDir, path[2:])
-		}
-	}
-	return path
-}
-
 func main() {
 	flag.Parse()
 
@@ -234,10 +218,18 @@ func main() {
 		return
 	}
 
+	// Read SSH Config file, ie. ~/.ssh/config file
+	// --sshconfig flag location for ssh_config file
+	_, err := sup.ParseAndLoadSSHConfig(sshConfig)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
 	if supfile == "" {
 		supfile = "./Supfile"
 	}
-	data, err := os.ReadFile(resolvePath(supfile))
+	data, err := os.ReadFile(sup.ResolvePath(supfile))
 	if err != nil {
 		firstErr := err
 		data, err = os.ReadFile("./Supfile.yml") // Alternative to ./Supfile.
@@ -300,36 +292,6 @@ func main() {
 			os.Exit(1)
 		}
 		network.Hosts = hosts
-	}
-
-	// --sshconfig flag location for ssh_config file
-	if sshConfig != "" {
-		confHosts, err := sshconfig.ParseSSHConfig(resolvePath(sshConfig))
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-
-		// flatten Host -> *SSHHost, not the prettiest
-		// but will do
-		confMap := map[string]*sshconfig.SSHHost{}
-		for _, conf := range confHosts {
-			for _, host := range conf.Host {
-				confMap[host] = conf
-			}
-		}
-
-		// check network.Hosts for match
-		for _, host := range network.Hosts {
-			conf, found := confMap[host.Address]
-			if found {
-				host.User = conf.User
-				host.IdentityFile = resolvePath(conf.IdentityFile)
-				host.Address = conf.HostName
-				host.Port = fmt.Sprintf("%d", conf.Port)
-				host.KnownAs = conf.Host[0]
-			}
-		}
 	}
 
 	var vars sup.EnvList

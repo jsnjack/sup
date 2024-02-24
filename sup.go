@@ -29,7 +29,8 @@ func New(conf *Supfile) (*Stackup, error) {
 
 // Run runs set of commands on multiple hosts defined by network sequentially.
 // TODO: This megamoth method needs a big refactor and should be split
-//       to multiple smaller methods.
+//
+//	to multiple smaller methods.
 func (sup *Stackup) Run(network *Network, envVars EnvList, commands ...*Command) error {
 	if len(commands) == 0 {
 		return errors.New("no commands to be run")
@@ -38,15 +39,15 @@ func (sup *Stackup) Run(network *Network, envVars EnvList, commands ...*Command)
 	env := envVars.AsExport()
 
 	// Create clients for every host (either SSH or Localhost).
-	var bastion *SSHClient
+	var defaultNetworkBastion *SSHClient
 	if network.Bastion != "" {
-		bastion = &SSHClient{}
+		defaultNetworkBastion = &SSHClient{}
 		bastionHost, err := NewHost(network.Bastion)
-		bastion.host = bastionHost
+		defaultNetworkBastion.host = bastionHost
 		if err != nil {
 			return err
 		}
-		if err := bastion.Connect(); err != nil {
+		if err := defaultNetworkBastion.Connect(); err != nil {
 			return errors.Wrap(err, "connecting to bastion failed")
 		}
 	}
@@ -81,8 +82,24 @@ func (sup *Stackup) Run(network *Network, envVars EnvList, commands ...*Command)
 				color: Colors[i%len(Colors)],
 			}
 
-			if bastion != nil {
-				if err := remote.ConnectWith(bastion.DialThrough); err != nil {
+			if host.Bastion != "" {
+				hostBastion := &SSHClient{}
+				bastionHost, err := NewHost(host.Bastion)
+				hostBastion.host = bastionHost
+				if err != nil {
+					errCh <- errors.Wrap(err, "unable to parse bastion host extracted from ssh configuration file")
+					return
+				}
+				if err := hostBastion.Connect(); err != nil {
+					errCh <- errors.Wrap(err, "connecting to bastion failed")
+					return
+				}
+				if err := remote.ConnectWith(hostBastion.DialThrough); err != nil {
+					errCh <- errors.Wrap(err, "connecting to remote host through bastion failed")
+					return
+				}
+			} else if defaultNetworkBastion != nil {
+				if err := remote.ConnectWith(defaultNetworkBastion.DialThrough); err != nil {
 					errCh <- errors.Wrap(err, "connecting to remote host through bastion failed")
 					return
 				}

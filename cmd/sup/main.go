@@ -277,7 +277,7 @@ func main() {
 
 		var hosts []*sup.Host
 		for _, host := range network.Hosts {
-			if expr.MatchString(host.Address) {
+			if expr.MatchString(host.GetHostname()) {
 				hosts = append(hosts, host)
 			}
 		}
@@ -298,7 +298,7 @@ func main() {
 
 		var hosts []*sup.Host
 		for _, host := range network.Hosts {
-			if !expr.MatchString(host.Address) {
+			if !expr.MatchString(host.GetHostname()) {
 				hosts = append(hosts, host)
 			}
 		}

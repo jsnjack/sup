@@ -269,20 +269,29 @@ func main() {
 
 	// --only flag filters hosts
 	if onlyHosts != "" {
-		expr, err := regexp.CompilePOSIX(onlyHosts)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-
 		var hosts []*sup.Host
-		for _, host := range network.Hosts {
-			if expr.MatchString(host.GetHostname()) {
-				hosts = append(hosts, host)
+		if strings.HasPrefix(onlyHosts, "=") {
+			exactMatch := onlyHosts[1:] // Remove the = prefix
+			for _, host := range network.Hosts {
+				if host.GetHostname() == exactMatch {
+					hosts = append(hosts, host)
+					break
+				}
+			}
+		} else {
+			expr, err := regexp.CompilePOSIX(onlyHosts)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			for _, host := range network.Hosts {
+				if expr.MatchString(host.GetHostname()) {
+					hosts = append(hosts, host)
+				}
 			}
 		}
 		if len(hosts) == 0 {
-			fmt.Fprintln(os.Stderr, fmt.Errorf("no hosts match --only '%v' regexp", onlyHosts))
+			fmt.Fprintln(os.Stderr, fmt.Errorf("no hosts match --only '%v'", onlyHosts))
 			os.Exit(1)
 		}
 		network.Hosts = hosts
@@ -290,20 +299,28 @@ func main() {
 
 	// --except flag filters out hosts
 	if exceptHosts != "" {
-		expr, err := regexp.CompilePOSIX(exceptHosts)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-
 		var hosts []*sup.Host
-		for _, host := range network.Hosts {
-			if !expr.MatchString(host.GetHostname()) {
-				hosts = append(hosts, host)
+		if strings.HasPrefix(exceptHosts, "=") {
+			exactMatch := exceptHosts[1:] // Remove the = prefix
+			for _, host := range network.Hosts {
+				if host.GetHostname() != exactMatch {
+					hosts = append(hosts, host)
+				}
+			}
+		} else {
+			expr, err := regexp.CompilePOSIX(exceptHosts)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			for _, host := range network.Hosts {
+				if !expr.MatchString(host.GetHostname()) {
+					hosts = append(hosts, host)
+				}
 			}
 		}
 		if len(hosts) == 0 {
-			fmt.Fprintln(os.Stderr, fmt.Errorf("no hosts left after --except '%v' regexp", onlyHosts))
+			fmt.Fprintln(os.Stderr, fmt.Errorf("no hosts left after --except '%v' regexp", exceptHosts))
 			os.Exit(1)
 		}
 		network.Hosts = hosts

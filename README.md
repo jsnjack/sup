@@ -30,8 +30,8 @@ Stack Up is a simple deployment tool that performs given set of commands on mult
 |-------------------|----------------------------------|
 | `-f Supfile`      | Custom path to Supfile           |
 | `-e`, `--env=[]`  | Set environment variables        |
-| `-only REGEXP`    | Filter hosts matching regexp     |
-| `-except REGEXP`  | Filter out hosts matching regexp |
+| `-only REGEXP`    | Filter hosts matching regexp (use =HOSTNAME for exact match) |
+| `-except REGEXP`  | Filter out hosts matching regexp (use =HOSTNAME for exact match) |
 | `-debug`, `-D`    | Enable debug/verbose mode        |
 | `-disable-prefix` | Disable hostname prefix          |
 | `-help`, `-h`     | Show help/usage                  |
